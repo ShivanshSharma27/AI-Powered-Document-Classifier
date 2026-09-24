@@ -4,57 +4,70 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Document Classifier & Intake Console</title>
-  <!-- Tailwind CSS CDN for styling -->
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .custom-scroll::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 4px;
-    }
-    .custom-scroll::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
 
   <!-- ========================================== -->
-  <!-- 1. LOGIN SCREEN OVERLAY                    -->
+  <!-- 1. AUTH SCREEN OVERLAY (LOGIN & REGISTER)  -->
   <!-- ========================================== -->
   <div id="authSection" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-8 mx-4">
+      
+      <!-- Brand Header -->
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 text-white mb-3 shadow-md shadow-indigo-200">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
         </div>
-        <h2 class="text-2xl font-bold text-slate-900">Sign In</h2>
-        <p class="text-xs text-slate-500 mt-1">AI Document Classifier Intake System</p>
+        <h2 id="authTitle" class="text-2xl font-bold text-slate-900">Sign In</h2>
+        <p id="authSubtitle" class="text-xs text-slate-500 mt-1">Access your document classification console</p>
       </div>
 
-      <div id="authAlert" class="hidden mb-4 p-3 rounded-lg text-xs bg-rose-50 text-rose-700 border border-rose-200"></div>
+      <!-- Notification / Alert Box -->
+      <div id="authAlert" class="hidden mb-4 p-3 rounded-lg text-xs border"></div>
 
-      <form id="loginForm" class="space-y-4">
+      <!-- Tab Switcher -->
+      <div class="flex border-b border-slate-200 mb-5 text-sm font-semibold">
+        <button id="tabLogin" onclick="switchAuthMode('login')" class="flex-1 pb-2 text-indigo-600 border-b-2 border-indigo-600 transition">Sign In</button>
+        <button id="tabRegister" onclick="switchAuthMode('register')" class="flex-1 pb-2 text-slate-400 border-b-2 border-transparent transition">Register</button>
+      </div>
+
+      <!-- Form Container -->
+      <form id="authForm" class="space-y-4">
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Username</label>
-          <input type="text" id="usernameInput" required value="admin"
-            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Username" />
+          <input type="text" id="usernameInput" required minlength="3" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="e.g. johndoe" />
         </div>
+
         <div>
           <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-          <input type="password" id="passwordInput" required value="password"
-            class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm" placeholder="Password" />
+          <input type="password" id="passwordInput" required minlength="4" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="••••••••" />
         </div>
-        <button type="submit" id="loginBtn"
-          class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition text-sm flex items-center justify-center">
-          Sign In
+
+        <!-- Confirm Password (Shown during Registration) -->
+        <div id="confirmPasswordGroup" class="hidden">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1">Confirm Password</label>
+          <input type="password" id="confirmPasswordInput" minlength="4" class="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm" placeholder="••••••••" />
+        </div>
+
+        <button type="submit" id="authSubmitBtn" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm transition text-sm flex items-center justify-center">
+          login
         </button>
       </form>
+
+      <div class="mt-4 text-center">
+        <button id="authSwitchPrompt" onclick="toggleAuthMode()" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition">
+          Don't have an account? Register
+        </button>
+      </div>
+
     </div>
   </div>
 
@@ -62,22 +75,17 @@
   <!-- 2. MAIN APPLICATION DASHBOARD              -->
   <!-- ========================================== -->
   <div id="mainDashboard" class="hidden min-h-screen flex flex-col">
-    
-    <!-- Top Navigation Bar -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         <div class="flex items-center space-x-3">
-          <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">
-            AI
-          </div>
+          <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold">AI</div>
           <div>
-            <span class="font-bold text-slate-900 tracking-tight">DocScanner</span>
-            <span class="ml-2 text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-medium">YOLO + OCR</span>
+            <span class="font-bold text-slate-900 tracking-tight">AI - DocScanner </span>
           </div>
         </div>
 
         <div class="flex items-center space-x-4">
-          <span id="userStatus" class="text-xs text-slate-500 font-medium hidden sm:inline-block">Logged in as <b>admin</b></span>
+          <span id="userStatus" class="text-xs text-slate-500 font-medium hidden sm:inline-block">Logged in as <b id="loggedInUser">User</b></span>
           <button onclick="handleLogout()" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-md transition">
             Sign Out
           </button>
@@ -85,9 +93,7 @@
       </div>
     </header>
 
-    <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      
       <!-- Metrics Overview -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-xs">
@@ -111,34 +117,30 @@
       <!-- Upload Section -->
       <section class="bg-white rounded-xl border border-slate-200 shadow-xs p-6">
         <h3 class="text-sm font-semibold text-slate-900 mb-1">Document Upload & Classification</h3>
-        <p class="text-xs text-slate-500 mb-4">Supported formats: .jpg, .jpeg, .png, .webp. Files are scanned, classified, and sensitive numbers are masked.</p>
+        <p class="text-xs text-slate-500 mb-4">Supported formats: .jpg, .jpeg, .png, .webp. Identity numbers are automatically masked.</p>
 
-        <div id="dropZone"
-             class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30 rounded-xl p-8 text-center transition cursor-pointer flex flex-col items-center justify-center">
+        <div id="dropZone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/50 hover:bg-indigo-50/30 rounded-xl p-8 text-center transition cursor-pointer flex flex-col items-center justify-center">
           <svg class="w-10 h-10 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
           </svg>
-          <span class="text-sm font-medium text-slate-700">Click to select or drag and drop document image</span>
+          <span class="text-sm font-medium text-slate-700">Click to upload or drag & drop document</span>
           <span class="text-xs text-slate-400 mt-1">Aadhaar Card, PAN Card, or Marksheet</span>
           <input type="file" id="fileInput" class="hidden" accept=".jpg,.jpeg,.png,.webp" />
         </div>
-
         <div id="uploadFeedback" class="hidden mt-4 p-3 rounded-lg text-xs flex items-center justify-between"></div>
       </section>
 
-      <!-- Documents Table Section -->
+      <!-- Records Table -->
       <section class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div class="p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div class="flex items-center space-x-2">
             <h3 class="font-semibold text-sm text-slate-900">Document Records</h3>
-            <button onclick="fetchDocuments()" class="text-slate-400 hover:text-slate-600 p-1 rounded transition" title="Refresh List">
+            <button onclick="fetchDocuments()" class="text-slate-400 hover:text-slate-600 p-1 rounded transition" title="Refresh">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
             </button>
           </div>
-
-          <!-- Status Filter Tabs -->
           <div class="flex flex-wrap gap-1.5 text-xs">
             <button onclick="applyFilter('ALL')" class="filter-tab active-tab px-3 py-1 rounded font-medium border" data-filter="ALL">All</button>
             <button onclick="applyFilter('NEEDS_REVIEW')" class="filter-tab px-3 py-1 rounded font-medium border text-amber-700 bg-amber-50 border-amber-200" data-filter="NEEDS_REVIEW">Needs Review</button>
@@ -153,103 +155,79 @@
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider font-semibold">
                 <th class="py-3 px-4">ID</th>
                 <th class="py-3 px-4">Filename</th>
+                <th class="py-3 px-4">Uploaded By</th>
                 <th class="py-3 px-4">Category</th>
                 <th class="py-3 px-4">Confidence</th>
                 <th class="py-3 px-4">Status</th>
-                <th class="py-3 px-4">Date</th>
-                <th class="py-3 px-4 text-right">Actions</th>
+                <th class="py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody id="documentsTbody" class="divide-y divide-slate-100">
-              <tr>
-                <td colspan="7" class="text-center py-8 text-slate-400">Loading documents...</td>
-              </tr>
+              <tr><td colspan="7" class="text-center py-8 text-slate-400">Loading documents...</td></tr>
             </tbody>
           </table>
         </div>
       </section>
-
     </main>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 3. DOCUMENT REVIEW & INSPECTION MODAL       -->
-  <!-- ========================================== -->
-  <div id="inspectModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+  <!-- Review Modal -->
+  <div id="inspectModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl max-w-2xl w-full max-h-[85vh] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
-      
       <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
         <h4 class="font-bold text-sm text-slate-900" id="modalFileName">Document Inspection</h4>
-        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 rounded p-1">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600">✕</button>
       </div>
-
-      <div class="p-5 overflow-y-auto custom-scroll space-y-4 text-xs">
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
         <div class="grid grid-cols-2 gap-3">
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
             <span class="text-slate-400 uppercase font-semibold block">Predicted Category</span>
             <span id="modalPredictedCategory" class="text-sm font-bold text-slate-800 mt-1 block">--</span>
           </div>
           <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-            <span class="text-slate-400 uppercase font-semibold block">Confidence Score</span>
+            <span class="text-slate-400 uppercase font-semibold block">Confidence</span>
             <span id="modalConfidenceScore" class="text-sm font-bold text-slate-800 mt-1 block">--</span>
           </div>
         </div>
-
         <div>
-          <span class="text-slate-500 font-semibold block mb-1">OCR Extracted Text (Sensitive Data Redacted)</span>
-          <pre id="modalExtractedText" class="p-3 bg-slate-900 text-slate-200 rounded-lg font-mono text-[11px] h-40 overflow-y-auto whitespace-pre-wrap custom-scroll">--</pre>
+          <span class="text-slate-500 font-semibold block mb-1">OCR Extracted Text (Masked)</span>
+          <pre id="modalExtractedText" class="p-3 bg-slate-900 text-slate-200 rounded-lg font-mono text-[11px] h-40 overflow-y-auto whitespace-pre-wrap">--</pre>
         </div>
-
         <div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg space-y-2">
           <label class="font-semibold text-slate-800 block">Manual Category Fix</label>
-          <p class="text-slate-500 text-[11px]">Correct the label if the automatic classification fell below threshold or was misidentified.</p>
-          <div class="flex items-center space-x-2 pt-1">
-            <select id="correctCategorySelect" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+          <div class="flex items-center space-x-2">
+            <select id="correctCategorySelect" class="flex-1 bg-white border border-slate-300 rounded px-2.5 py-1.5 focus:outline-none">
               <option value="Aadhaar Card">Aadhaar Card</option>
               <option value="PAN Card">PAN Card</option>
               <option value="Marksheet">Marksheet</option>
               <option value="Unrecognized">Unrecognized</option>
             </select>
-            <button onclick="submitManualFix()" id="submitFixBtn" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">
-              Apply Fix
-            </button>
+            <button onclick="submitManualFix()" id="submitFixBtn" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded transition">Save</button>
           </div>
         </div>
       </div>
-
       <div class="px-5 py-3 border-t border-slate-200 flex justify-end">
-        <button onclick="closeModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-medium text-xs">
-          Close
-        </button>
+        <button onclick="closeModal()" class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded text-xs font-medium">Close</button>
       </div>
-
     </div>
   </div>
 
   <!-- ========================================== -->
-  <!-- 4. JAVASCRIPT APP LOGIC                     -->
+  <!-- 3. CLIENT SCRIPT                            -->
   <!-- ========================================== -->
   <script>
-    // Adjust if backend is hosted on a specific host/port
     const API_BASE = "http://localhost:8000";
-    
+    let authMode = "login"; // "login" or "register"
     let allDocuments = [];
     let activeFilter = "ALL";
     let selectedDocId = null;
 
-    // --- On Page Load ---
     window.addEventListener("DOMContentLoaded", () => {
       initAuth();
       setupUploadZone();
     });
 
-    function getAuthToken() {
-      return localStorage.getItem("access_token");
-    }
+    function getAuthToken() { return localStorage.getItem("access_token"); }
 
     function initAuth() {
       const token = getAuthToken();
@@ -259,89 +237,165 @@
       } else {
         document.getElementById("authSection").classList.add("hidden");
         document.getElementById("mainDashboard").classList.remove("hidden");
+        document.getElementById("loggedInUser").innerText = localStorage.getItem("username") || "User";
         fetchDocuments();
       }
     }
 
     function handleLogout() {
       localStorage.removeItem("access_token");
+      localStorage.removeItem("username");
       initAuth();
     }
 
-    // --- Authentication Submit ---
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const user = document.getElementById("usernameInput").value.trim();
-      const pass = document.getElementById("passwordInput").value.trim();
+    // Toggle between Login & Register tabs
+    function switchAuthMode(mode) {
+      authMode = mode;
       const alertBox = document.getElementById("authAlert");
-      const btn = document.getElementById("loginBtn");
+      alertBox.classList.add("hidden");
+
+      const title = document.getElementById("authTitle");
+      const subtitle = document.getElementById("authSubtitle");
+      const submitBtn = document.getElementById("authSubmitBtn");
+      const switchPrompt = document.getElementById("authSwitchPrompt");
+      const confirmGroup = document.getElementById("confirmPasswordGroup");
+      const tabLogin = document.getElementById("tabLogin");
+      const tabRegister = document.getElementById("tabRegister");
+
+      if (mode === "register") {
+        title.innerText = "Create Account";
+        subtitle.innerText = "Register a new account to use the pipeline";
+        submitBtn.innerText = "Create Account";
+        switchPrompt.innerText = "Already have an account? Sign In";
+        confirmGroup.classList.remove("hidden");
+        document.getElementById("confirmPasswordInput").required = true;
+
+        tabRegister.className = "flex-1 pb-2 text-indigo-600 border-b-2 border-indigo-600 transition";
+        tabLogin.className = "flex-1 pb-2 text-slate-400 border-b-2 border-transparent transition";
+      } else {
+        title.innerText = "Sign In";
+        subtitle.innerText = "Access your document classification console";
+        submitBtn.innerText = "Sign In";
+        switchPrompt.innerText = "Don't have an account? Register";
+        confirmGroup.classList.add("hidden");
+        document.getElementById("confirmPasswordInput").required = false;
+
+        tabLogin.className = "flex-1 pb-2 text-indigo-600 border-b-2 border-indigo-600 transition";
+        tabRegister.className = "flex-1 pb-2 text-slate-400 border-b-2 border-transparent transition";
+      }
+    }
+
+    function toggleAuthMode() {
+      switchAuthMode(authMode === "login" ? "register" : "login");
+    }
+
+    // Unified Form Submit (Login or Register)
+    document.getElementById("authForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const username = document.getElementById("usernameInput").value.trim();
+      const password = document.getElementById("passwordInput").value.trim();
+      const alertBox = document.getElementById("authAlert");
+      const submitBtn = document.getElementById("authSubmitBtn");
 
       alertBox.classList.add("hidden");
-      btn.innerText = "Signing in...";
-      btn.disabled = true;
 
-      try {
-        const formData = new URLSearchParams();
-        formData.append("username", user);
-        formData.append("password", pass);
-
-        const res = await fetch(`${API_BASE}/token`, {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: formData.toString()
-        });
-
-        if (!res.ok) {
-          throw new Error("Invalid username or password");
+      if (authMode === "register") {
+        const confirmPassword = document.getElementById("confirmPasswordInput").value.trim();
+        if (password !== confirmPassword) {
+          showAlert("Passwords do not match", "error");
+          return;
         }
 
-        const data = await res.json();
-        localStorage.setItem("access_token", data.access_token);
-        initAuth();
-      } catch (err) {
-        alertBox.innerText = err.message;
-        alertBox.classList.remove("hidden");
-      } finally {
-        btn.innerText = "Sign In";
-        btn.disabled = false;
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Registering...";
+
+        try {
+          const res = await fetch(`${API_BASE}/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Registration failed");
+
+          showAlert("Registration successful! Please sign in with your credentials.", "success");
+          switchAuthMode("login");
+          document.getElementById("passwordInput").value = "";
+          document.getElementById("confirmPasswordInput").value = "";
+        } catch (err) {
+          showAlert(err.message, "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Create Account";
+        }
+
+      } else {
+        // Sign In Flow
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Signing in...";
+
+        try {
+          const formData = new URLSearchParams();
+          formData.append("username", username);
+          formData.append("password", password);
+
+          const res = await fetch(`${API_BASE}/token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.detail || "Invalid credentials");
+
+          localStorage.setItem("access_token", data.access_token);
+          localStorage.setItem("username", data.username);
+          initAuth();
+        } catch (err) {
+          showAlert(err.message, "error");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerText = "Sign In";
+        }
       }
     });
 
-    // --- Upload Drop Zone Setup ---
+    function showAlert(msg, type) {
+      const alertBox = document.getElementById("authAlert");
+      alertBox.innerText = msg;
+      if (type === "success") {
+        alertBox.className = "mb-4 p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 block";
+      } else {
+        alertBox.className = "mb-4 p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200 block";
+      }
+    }
+
+    // File Upload & Pipeline
     function setupUploadZone() {
       const dropZone = document.getElementById("dropZone");
       const fileInput = document.getElementById("fileInput");
 
       dropZone.addEventListener("click", () => fileInput.click());
-
-      ["dragover", "dragenter"].forEach(type => {
-        dropZone.addEventListener(type, (e) => {
-          e.preventDefault();
-          dropZone.classList.add("border-indigo-500", "bg-indigo-50/40");
-        });
-      });
-
-      ["dragleave", "drop"].forEach(type => {
-        dropZone.addEventListener(type, (e) => {
-          e.preventDefault();
-          dropZone.classList.remove("border-indigo-500", "bg-indigo-50/40");
-        });
-      });
-
+      ["dragover", "dragenter"].forEach(t => dropZone.addEventListener(t, (e) => {
+        e.preventDefault();
+        dropZone.classList.add("border-indigo-500", "bg-indigo-50/40");
+      }));
+      ["dragleave", "drop"].forEach(t => dropZone.addEventListener(t, (e) => {
+        e.preventDefault();
+        dropZone.classList.remove("border-indigo-500", "bg-indigo-50/40");
+      }));
       dropZone.addEventListener("drop", (e) => {
         if (e.dataTransfer.files.length) uploadFile(e.dataTransfer.files[0]);
       });
-
       fileInput.addEventListener("change", (e) => {
         if (e.target.files.length) uploadFile(e.target.files[0]);
       });
     }
 
-    // --- Upload File API Call ---
     async function uploadFile(file) {
       const fb = document.getElementById("uploadFeedback");
-      fb.className = "mt-4 p-3 rounded-lg text-xs flex items-center justify-between bg-indigo-50 text-indigo-800 border border-indigo-200";
-      fb.innerHTML = `<span>Processing <b>${file.name}</b> through YOLO & OCR...</span>`;
+      fb.className = "mt-4 p-3 rounded-lg text-xs bg-indigo-50 text-indigo-800 border border-indigo-200 flex items-center justify-between";
+      fb.innerHTML = `<span>Processing <b>${file.name}</b> through pipeline...</span>`;
       fb.classList.remove("hidden");
 
       const formData = new FormData();
@@ -354,51 +408,34 @@
           body: formData
         });
 
-        if (res.status === 401) {
-          handleLogout();
-          return;
-        }
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Failed to upload file");
-        }
-
+        if (res.status === 401) { handleLogout(); return; }
         const data = await res.json();
-        fb.className = "mt-4 p-3 rounded-lg text-xs flex items-center justify-between bg-emerald-50 text-emerald-800 border border-emerald-200";
-        fb.innerHTML = `
-          <span>✓ Classified as <b>${data.category}</b> with <b>${Math.round(data.confidence * 100)}%</b> confidence (${data.status})</span>
-          <button onclick="inspectDocument(${data.id})" class="underline font-semibold ml-3">View Record</button>
-        `;
+        if (!res.ok) throw new Error(data.detail || "Upload error");
+
+        fb.className = "mt-4 p-3 rounded-lg text-xs bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-between";
+        fb.innerHTML = `<span>✓ Classified as <b>${data.category}</b> (${Math.round(data.confidence * 100)}%)</span>`;
         fetchDocuments();
       } catch (err) {
-        fb.className = "mt-4 p-3 rounded-lg text-xs flex items-center justify-between bg-rose-50 text-rose-800 border border-rose-200";
+        fb.className = "mt-4 p-3 rounded-lg text-xs bg-rose-50 text-rose-800 border border-rose-200 block";
         fb.innerHTML = `<span>Upload failed: ${err.message}</span>`;
       }
     }
 
-    // --- Fetch All Documents ---
     async function fetchDocuments() {
       const tbody = document.getElementById("documentsTbody");
       try {
         const res = await fetch(`${API_BASE}/documents`, {
           headers: { "Authorization": `Bearer ${getAuthToken()}` }
         });
-
-        if (res.status === 401) {
-          handleLogout();
-          return;
-        }
-
+        if (res.status === 401) { handleLogout(); return; }
         allDocuments = await res.json();
         updateMetrics(allDocuments);
         renderDocuments();
       } catch (err) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500 font-medium">Failed to load records: ${err.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-rose-500">Failed to load records: ${err.message}</td></tr>`;
       }
     }
 
-    // --- Update Metric Cards ---
     function updateMetrics(docs) {
       document.getElementById("metricTotal").innerText = docs.length;
       document.getElementById("metricProcessed").innerText = docs.filter(d => d.status === "PROCESSED").length;
@@ -406,13 +443,11 @@
       document.getElementById("metricVerified").innerText = docs.filter(d => d.status === "MANUALLY_VERIFIED").length;
     }
 
-    // --- Filter Handlers ---
     function applyFilter(filter) {
       activeFilter = filter;
       document.querySelectorAll(".filter-tab").forEach(tab => {
         if (tab.getAttribute("data-filter") === filter) {
           tab.classList.add("bg-slate-900", "text-white");
-          tab.classList.remove("bg-white", "text-slate-700");
         } else {
           tab.classList.remove("bg-slate-900", "text-white");
         }
@@ -420,66 +455,48 @@
       renderDocuments();
     }
 
-    // --- Render Table ---
     function renderDocuments() {
       const tbody = document.getElementById("documentsTbody");
-      let filtered = allDocuments;
-      if (activeFilter !== "ALL") {
-        filtered = allDocuments.filter(d => d.status === activeFilter);
-      }
+      let filtered = (activeFilter === "ALL") ? allDocuments : allDocuments.filter(d => d.status === activeFilter);
 
       if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No documents found for this filter.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400">No records found.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = filtered.map(doc => {
         const confPct = Math.round((doc.confidence_score || 0) * 100);
-        const statusBadge = getStatusBadge(doc.status);
-        const dateStr = doc.created_at ? new Date(doc.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "--";
+        const badge = doc.status === "PROCESSED"
+          ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">PROCESSED</span>'
+          : (doc.status === "NEEDS_REVIEW"
+              ? '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">NEEDS REVIEW</span>'
+              : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800">VERIFIED</span>');
 
         return `
-          <tr class="hover:bg-slate-50/80 transition">
+          <tr class="hover:bg-slate-50 transition">
             <td class="py-3 px-4 font-mono text-slate-400">#${doc.id}</td>
-            <td class="py-3 px-4 font-medium text-slate-900 max-w-xs truncate" title="${doc.filename}">${doc.filename}</td>
+            <td class="py-3 px-4 font-medium text-slate-900 truncate max-w-xs">${doc.filename}</td>
+            <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">${doc.uploaded_by || 'admin'}</td>
             <td class="py-3 px-4 font-semibold text-slate-800">${doc.predicted_category || "Unrecognized"}</td>
-            <td class="py-3 px-4">
-              <span class="font-medium ${confPct >= 70 ? 'text-emerald-600' : 'text-amber-600'}">${confPct}%</span>
-            </td>
-            <td class="py-3 px-4">${statusBadge}</td>
-            <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">${dateStr}</td>
+            <td class="py-3 px-4 font-medium ${confPct >= 70 ? 'text-emerald-600' : 'text-amber-600'}">${confPct}%</td>
+            <td class="py-3 px-4">${badge}</td>
             <td class="py-3 px-4 text-right">
-              <button onclick="inspectDocument(${doc.id})" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 transition font-medium">
-                Inspect
-              </button>
+              <button onclick="inspectDocument(${doc.id})" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded border border-indigo-200 transition">Inspect</button>
             </td>
           </tr>
         `;
       }).join("");
     }
 
-    function getStatusBadge(status) {
-      if (status === "PROCESSED") {
-        return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">PROCESSED</span>`;
-      } else if (status === "NEEDS_REVIEW") {
-        return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">NEEDS REVIEW</span>`;
-      } else {
-        return `<span class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-sky-100 text-sky-800">VERIFIED</span>`;
-      }
-    }
-
-    // --- Modal Inspect & Manual Fix ---
     function inspectDocument(id) {
       const doc = allDocuments.find(d => d.id === id);
       if (!doc) return;
-
       selectedDocId = id;
       document.getElementById("modalFileName").innerText = doc.filename;
       document.getElementById("modalPredictedCategory").innerText = doc.predicted_category || "Unrecognized";
       document.getElementById("modalConfidenceScore").innerText = `${Math.round((doc.confidence_score || 0) * 100)}%`;
-      document.getElementById("modalExtractedText").innerText = doc.extracted_text || "(No text recognized by OCR)";
+      document.getElementById("modalExtractedText").innerText = doc.extracted_text || "(No text recognized)";
       document.getElementById("correctCategorySelect").value = doc.predicted_category || "Aadhaar Card";
-
       document.getElementById("inspectModal").classList.remove("hidden");
     }
 
@@ -491,11 +508,7 @@
     async function submitManualFix() {
       if (!selectedDocId) return;
       const btn = document.getElementById("submitFixBtn");
-      const chosenCategory = document.getElementById("correctCategorySelect").value;
-
       btn.disabled = true;
-      btn.innerText = "Saving...";
-
       try {
         const res = await fetch(`${API_BASE}/review/${selectedDocId}`, {
           method: "PATCH",
@@ -503,26 +516,15 @@
             "Content-Type": "application/json",
             "Authorization": `Bearer ${getAuthToken()}`
           },
-          body: JSON.stringify({ correct_category: chosenCategory })
+          body: JSON.stringify({ correct_category: document.getElementById("correctCategorySelect").value })
         });
-
-        if (res.status === 401) {
-          handleLogout();
-          return;
-        }
-
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.detail || "Failed to update category");
-        }
-
+        if (!res.ok) throw new Error("Failed to update");
         closeModal();
         fetchDocuments();
-      } catch (err) {
-        alert("Update failed: " + err.message);
+      } catch (e) {
+        alert(e.message);
       } finally {
         btn.disabled = false;
-        btn.innerText = "Apply Fix";
       }
     }
   </script>
